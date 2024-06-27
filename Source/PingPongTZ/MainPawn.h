@@ -38,16 +38,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Called every frame
-	virtual void Tick(float DeltaSeconds) override;
-
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	/** Called for movement input */
-	//UFUNCTION(NetMulticast, Reliable)
 	void Move(const FInputActionValue& Value);
-	//void Move_Implementation(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Move(const FVector Value);
@@ -69,6 +64,4 @@ private:
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-
-	float LocalDeltaTime;
 };

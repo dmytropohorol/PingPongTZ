@@ -13,7 +13,7 @@
 AMainPawn::AMainPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bAlwaysRelevant = true;
 	bReplicates = true;
 
@@ -42,9 +42,10 @@ void AMainPawn::Move(const FInputActionValue& Value)
 
 	if (Controller != nullptr)
 	{
-		// get direction
+		// get location and direction
 		FVector Location = GetActorLocation();
 		FVector Direction = GetActorForwardVector();
+
 		// clamping and applying movement
 		Location.Y = FMath::Clamp( (GetActorLocation().Y + ((-1 * Direction.X) * (MovementValue * PawnSpeed))), MinDisnance, MaxDisnance);
 		HasAuthority() ? Multicast_Move(Location) : Server_Move(Location);
@@ -59,13 +60,6 @@ void AMainPawn::Server_Move_Implementation(const FVector Value)
 void AMainPawn::Multicast_Move_Implementation(const FVector Value)
 {
 	SetActorLocation(Value, false);
-}
-
-// Called every frame
-void AMainPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	LocalDeltaTime = DeltaTime;
 }
 
 // Called to bind functionality to input

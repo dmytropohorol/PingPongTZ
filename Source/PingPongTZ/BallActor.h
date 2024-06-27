@@ -33,11 +33,13 @@ protected:
 	//replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	//Setting actor location, based on replicated variable
 	UFUNCTION()
 	void Move();
 
 private:
 
+	//The direction in which the ball will move on the next tick
 	UPROPERTY(Replicated)
 	FVector Velocity;
 
