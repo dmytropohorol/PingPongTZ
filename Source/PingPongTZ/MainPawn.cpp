@@ -6,18 +6,28 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "GameFramework/PawnMovementComponent.h"
 #include "InputAction.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AMainPawn::AMainPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	bAlwaysRelevant = true;
 	bReplicates = true;
+	PawnSpeed = 50.f;
+	MinDisnance = -1600.f;
+	MaxDisnance = 1600.f;
+}
 
-	PawnMovementComponent = CreateDefaultSubobject<UPawnMovementComponent>(TEXT("PawnMovementComponent"));
+void AMainPawn::MoveOnServer_Implementation(FVector Value)
+{
+	SetActorLocation(Value);
+}
+
+bool AMainPawn::MoveOnServer_Validate(FVector Value)
+{
+	return true;
 }
 
 // Called when the game starts or when spawned
@@ -38,28 +48,24 @@ void AMainPawn::BeginPlay()
 void AMainPawn::Move(const FInputActionValue& Value)
 {
 	// input is a float
-	const float MovementValue = Value.Get<float>();
+	float MovementValue = Value.Get<float>();
 
 	if (Controller != nullptr)
 	{
 		// get location and direction
 		FVector Location = GetActorLocation();
-		FVector Direction = GetActorForwardVector();
 
 		// clamping and applying movement
-		Location.Y = FMath::Clamp( (GetActorLocation().Y + ((-1 * Direction.X) * (MovementValue * PawnSpeed))), MinDisnance, MaxDisnance);
-		HasAuthority() ? Multicast_Move(Location) : Server_Move(Location);
+		Location.Y = FMath::Clamp((GetActorLocation().Y + ((-1 * GetActorForwardVector().X) * (MovementValue * PawnSpeed))), MinDisnance, MaxDisnance);
+
+		if (HasAuthority()) {
+			SetActorLocation(Location);
+		}
+		else {
+			SetActorLocation(Location);
+			MoveOnServer(Location);
+		}
 	}
-}
-
-void AMainPawn::Server_Move_Implementation(const FVector Value)
-{
-	Multicast_Move(Value);
-}
-
-void AMainPawn::Multicast_Move_Implementation(const FVector Value)
-{
-	SetActorLocation(Value, false);
 }
 
 // Called to bind functionality to input

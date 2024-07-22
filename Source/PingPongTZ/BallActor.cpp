@@ -5,34 +5,28 @@
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MainPawn.h"
+#include "Components/SceneComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values
 ABallActor::ABallActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	BallSpeed = 100.f;
-	Velocity = FVector(0.f, 0.f, 0.f);
-
-	SetReplicateMovement(true);
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SphereMesh"));
-	StaticMeshComponent->SetupAttachment(RootComponent);
+	SetRootComponent(StaticMeshComponent);
+}
+
+void ABallActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	SetActorLocation((GetActorLocation() + RepVelocity * 100), true);
 }
 
 void ABallActor::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (Cast<AMainPawn>(OtherActor)) {
-		Velocity.X *= -1;
-	}
-	else {
-		Velocity.Y *= -1;
-	}
-}
-
-void ABallActor::Move()
-{
-	SetActorLocation((GetActorLocation() + Velocity * BallSpeed), true);
+	RepVelocity = (RepVelocity - 2*(RepVelocity * Hit.ImpactNormal)*Hit.ImpactNormal).GetSafeNormal();
 }
 
 // Called when the game starts or when spawned
@@ -40,24 +34,19 @@ void ABallActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	StaticMeshComponent->OnComponentHit.AddDynamic(this, &ABallActor::OnHit);
+	if (HasAuthority()) {
+		StaticMeshComponent->OnComponentHit.AddDynamic(this, &ABallActor::OnHit);
 
-	FMath::RandBool() ? Velocity.X = -1.f : Velocity.X = 1.f;
-	FMath::RandBool() ? Velocity.Y = -1.f : Velocity.Y = 1.f;
+		//Getting a random starting vector. Using randBool for choosing bigger ranges of numbers are important because if we just use 
+		// FRandRange(-1, 1), the vector can get 0 or close to it, and players need to wait a lot of time before the ball will reach them.
+		RepVelocity = FVector((FMath::RandBool() ? FMath::FRandRange(-1.f, -0.5f) : FMath::FRandRange(0.5f, 1.f)),
+			(FMath::RandBool() ? FMath::FRandRange(-1.f, -0.5f) : FMath::FRandRange(0.5f, 1.f)), 0).GetSafeNormal();
+	}
 }
 
 void ABallActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ABallActor, Velocity);
+	DOREPLIFETIME(ABallActor, RepVelocity);
 }
-
-// Called every frame
-void ABallActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	Move();
-}
-

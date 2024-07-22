@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "BallActor.generated.h"
 
+class UFloatingPawnMovement;
+class USceneComponent;
+
 UCLASS()
 class PINGPONGTZ_API ABallActor : public AActor
 {
@@ -16,14 +19,11 @@ public:
 	// Sets default values for this actor's properties
 	ABallActor();
 
-	// Called every frame
+	UFUNCTION()
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BallSpeed;
 
 protected:
 
@@ -33,16 +33,11 @@ protected:
 	//replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	//Setting actor location, based on replicated variable
-	UFUNCTION()
-	void Move();
-
 private:
 
-	//The direction in which the ball will move on the next tick
 	UPROPERTY(Replicated)
-	FVector Velocity;
+	FVector RepVelocity;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* StaticMeshComponent;
 };

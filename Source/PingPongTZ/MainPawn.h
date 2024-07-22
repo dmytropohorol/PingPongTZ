@@ -8,7 +8,6 @@
 
 class UInputMappingContext;
 class UInputAction;
-class UPawnMovementComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -35,6 +34,7 @@ public:
 
 protected:
 
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -44,18 +44,12 @@ protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
-	UFUNCTION(Server, Reliable)
-	void Server_Move(const FVector Value);
-	void Server_Move_Implementation(const FVector Value);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Move(const FVector Value);
-	void Multicast_Move_Implementation(const FVector Value);
+	UFUNCTION(Reliable, Server, WithValidation)
+	void MoveOnServer(FVector Value);
+	void MoveOnServer_Implementation(FVector Value);
+	bool MoveOnServer_Validate(FVector Value);
 
 private:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UPawnMovementComponent* PawnMovementComponent;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
