@@ -16,4 +16,23 @@ class AMainGameModeBase : public AGameModeBase
 	
 public:
 	AMainGameModeBase();
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+private:
+
+	UFUNCTION()
+	void SpawnNewBall(enum ETeamEnum Team, int32 Value);
+
+	TSubclassOf<class ABallActor> BallActor;
+
+	FTransform SpawnTransform;
+
+	UPROPERTY()
+	class AMainGameState* MainGameState;
+
+	UPROPERTY()
+	class AActor* CurrentBallActor;
 };
