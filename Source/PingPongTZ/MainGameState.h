@@ -8,8 +8,9 @@
 
 UENUM(BlueprintType)
 enum class ETeamEnum : uint8 {
-	Red = 0 UMETA(DisplayName = "Red"),
-	Blue = 1 UMETA(DisplayName = "Blue")
+	None = 0 UMETA(DisplayName = "None"),
+	Red = 1 UMETA(DisplayName = "Red"),
+	Blue = 2 UMETA(DisplayName = "Blue")
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnScoreChanged, ETeamEnum Team, int32 Value)
@@ -30,6 +31,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetTeamScore(ETeamEnum Team);
 
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const;
+
 	//Setter for red and blue teams score
 	UFUNCTION(BlueprintCallable)
 	void SetTeamScore(ETeamEnum Team, int32 Value);
@@ -41,9 +44,15 @@ public:
 
 private:
 
-	UPROPERTY()
+	UFUNCTION()
+	void OnRep_BlueTeamScoreChanged();
+
+	UFUNCTION()
+	void OnRep_RedTeamScoreChanged();
+
+	UPROPERTY(ReplicatedUsing = OnRep_BlueTeamScoreChanged)
 	int32 BlueTeamScore = 0;
 
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScoreChanged)
 	int32 RedTeamScore = 0;
 };

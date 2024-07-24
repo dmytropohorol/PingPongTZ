@@ -9,6 +9,8 @@
 #include "GameFramework/PlayerStart.h"
 #include "BallActor.h"
 #include "MainGameState.h"
+#include "EngineUtils.h"
+#include "Engine/PlayerStartPIE.h"
 
 AMainGameModeBase::AMainGameModeBase()
 {
@@ -50,24 +52,56 @@ void AMainGameModeBase::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void AMainGameModeBase::Logout(AController* Exiting)
+{
+	UWorld* World = GetWorld();
+	for (TActorIterator<APlayerStart> It(World); It; ++It)
+	{
+		APlayerStart* PlayerStart = *It;
+		for (FName Tag : PlayerStart->Tags) {
+			if (Tag == FName(Exiting->GetName())) {
+				PlayerStart->Tags.Remove(FName(Exiting->GetName()));
+				PlayerStart->Tags.Add("Free");
+				goto Logout;
+			}
+		}
+	}
+	Logout:
+	Super::Logout(Exiting);
+}
+
 AActor* AMainGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 {
-	TArray<AActor*> PlayerStarts;
-	UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
-	for (AActor* TempActor : PlayerStarts) {
-		APlayerStart* PlayerStart = Cast<APlayerStart>(TempActor);
-		if (PlayerStart) {
+	APlayerStart* FoundPlayerStart = nullptr;
+	UWorld* World = GetWorld();
+	for (TActorIterator<APlayerStart> It(World); It; ++It)
+	{
+		APlayerStart* PlayerStart = *It;
+
+		// If no PlayerStarts avaiable (it is not expected to be more than two players, but we don't want to have a crash), 
+		// just getting the first one
+		FoundPlayerStart = PlayerStart;
+		if (PlayerStart->IsA<APlayerStartPIE>())
+		{
+			// Always prefer the first "Play from Here" PlayerStart, if we find one while in PIE mode
+			FoundPlayerStart = PlayerStart;
+			goto ReturnFounded;
+		}
+		else
+		{
+			// Checking for "Free" tag, if found one, adding occupied tag and spawning there player
 			for (auto Tag : PlayerStart->Tags) {
 				if (Tag == "Free") {
 					PlayerStart->Tags.Remove("Free");
-					PlayerStart->Tags.Add("Occupied");
-					return PlayerStart;
+					PlayerStart->Tags.Add(FName(Player->GetName()));
+					FoundPlayerStart = PlayerStart;
+					goto ReturnFounded;
 				}
 			}
 		}
 	}
-	//@Task: if no playerstart found on level do not crush the game
-	return nullptr;
+	ReturnFounded:
+	return FoundPlayerStart;
 }
 
 void AMainGameModeBase::SpawnNewBall(ETeamEnum Team, int32 Value)

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "PingPongTZ/MainGameState.h"
 #include "MainGameModeBase.generated.h"
 
 /**
@@ -19,12 +20,14 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void Logout(AController* Exiting) override;
+
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 private:
 
 	UFUNCTION()
-	void SpawnNewBall(enum ETeamEnum Team, int32 Value);
+	void SpawnNewBall(ETeamEnum Team, int32 Value);
 
 	TSubclassOf<class ABallActor> BallActor;
 

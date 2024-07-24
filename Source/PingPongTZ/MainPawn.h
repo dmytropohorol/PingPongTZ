@@ -34,7 +34,6 @@ public:
 
 protected:
 
-
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -44,6 +43,7 @@ protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
+	//RPC for notifying the server about input from the client; only the "Server" RPC can send information from the client to the server
 	UFUNCTION(Reliable, Server, WithValidation)
 	void MoveOnServer(FVector Value);
 	void MoveOnServer_Implementation(FVector Value);

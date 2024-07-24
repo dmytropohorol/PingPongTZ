@@ -9,7 +9,7 @@ void UScoreWidget::WidgetSetup()
 {
 	UWorld* World = GetWorld();
 	if (World) {
-		GameState = Cast<class AMainGameState>(World->GetGameState());
+		GameState = Cast<AMainGameState>(World->GetGameState());
 		if (GameState) {
 			GameState->ScoreChangedDelegate.AddUObject(this, &ThisClass::SetTeamScore);
 		}
@@ -19,7 +19,7 @@ void UScoreWidget::WidgetSetup()
 	SetVisibility(ESlateVisibility::Visible);
 }
 
-void UScoreWidget::SetTeamScore(enum ETeamEnum Team, int32 Value)
+void UScoreWidget::SetTeamScore(ETeamEnum Team, int32 Value)
 {
 	switch (Team)
 	{
